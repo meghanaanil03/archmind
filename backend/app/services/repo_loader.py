@@ -17,6 +17,18 @@ IGNORED_DIRS = {
     ".vscode",
 }
 
+IGNORED_FILES = {
+    "package-lock.json",
+    "yarn.lock",
+    "pnpm-lock.yaml",
+}
+
+
+def build_preview(content: str, max_lines: int = 40, max_chars: int = 1500) -> str:
+    lines = content.splitlines()
+    preview = "\n".join(lines[:max_lines])
+    return preview[:max_chars]
+
 
 def load_repository(repo_path: str) -> list[dict]:
     root = Path(repo_path)
@@ -33,6 +45,9 @@ def load_repository(repo_path: str) -> list[dict]:
         if any(part in IGNORED_DIRS for part in path.parts):
             continue
 
+        if path.name in IGNORED_FILES:
+            continue
+
         if path.suffix.lower() not in ALLOWED_EXTENSIONS:
             continue
 
@@ -46,10 +61,17 @@ def load_repository(repo_path: str) -> list[dict]:
         except Exception:
             continue
 
+        normalized_path = str(path.relative_to(root)).replace("\\", "/")
+        lines = content.splitlines()
+
         files.append({
-            "path": str(path.relative_to(root)).replace("\\", "/"),
+            "path": normalized_path,
+            "name": path.name,
             "extension": path.suffix.lower(),
-            "content": content[:12000],
+            "content": content[:12000],   # keep for later deeper analysis
+            "preview": build_preview(content),
+            "line_count": len(lines),
+            "char_count": len(content),
         })
 
     return files
