@@ -1,5 +1,5 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException # type: ignore
+from pydantic import BaseModel # type: ignore
 
 from app.services.repo_loader import load_repository
 from app.services.file_filter import filter_files
@@ -21,17 +21,18 @@ def root():
 @app.post("/analyze/local")
 def analyze_local_repo(request: LocalRepoRequest):
     try:
-        
         files = load_repository(request.repo_path)
         filtered_files = filter_files(files)
         tree = build_tree_text(filtered_files)
-        architect_summary = run_architect_agent(tree, filtered_files)
+        architect_result = run_architect_agent(tree, filtered_files)
 
         return {
             "repo_path": request.repo_path,
             "file_count": len(filtered_files),
             "tree": tree,
-            "architect_summary": architect_summary
+            "architect_scout": architect_result["scout_result"],
+            "selected_files": architect_result["selected_files"],
+            "architect_summary": architect_result["final_summary"]
         }
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
