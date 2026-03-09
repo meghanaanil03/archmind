@@ -1,0 +1,35 @@
+:root {
+  font-family: Inter, system-ui, Arial, sans-serif;
+  color: #e8ecf1;
+  background: #0f1720;
+
+  --bg-main: #0f1720;
+  --bg-panel: rgba(22, 32, 44, 0.9);
+  --bg-deep: #0b1220;
+  --border: #263241;
+  --border-soft: #2b3745;
+  --text-main: #e8ecf1;
+  --text-soft: #a9b4c0;
+  --text-muted: #9ca3af;
+  --accent: #4f46e5;
+  --error-bg: #3a1820;
+  --error-border: #7f1d1d;
+  --error-text: #fecaca;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+  width: 100%;
+}
+
+body {
+  background: linear-gradient(180deg, #0f1720 0%, #111827 100%);
+  color: var(--text-main);
+}

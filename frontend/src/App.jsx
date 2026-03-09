@@ -3,7 +3,12 @@ import AnalyzeForm from "./components/AnalyzeForm";
 import SummaryCard from "./components/SummaryCard";
 import FileListCard from "./components/FileListCard";
 import MarkdownCard from "./components/MarkdownCard";
-import "./index.css";
+import Tabs from "./components/Tabs";
+
+import "./styles/base.css";
+import "./styles/layout.css";
+import "./styles/components.css";
+import "./styles/markdown.css";
 
 const API_URL = "http://127.0.0.1:8000/analyze/local";
 
@@ -12,6 +17,7 @@ export default function App() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState("overview");
 
   async function handleAnalyze(e) {
     e.preventDefault();
@@ -34,10 +40,9 @@ export default function App() {
         throw new Error(result.detail || "Analysis failed");
       }
 
-      console.log("API result:", result);
       setData(result);
+      setActiveTab("overview");
     } catch (err) {
-      console.error(err);
       setError(err.message || "Something went wrong");
     } finally {
       setLoading(false);
@@ -51,12 +56,12 @@ export default function App() {
   const architectSummary =
     typeof data?.architect_summary === "string"
       ? data.architect_summary
-      : JSON.stringify(data?.architect_summary, null, 2);
+      : JSON.stringify(data?.architect_summary ?? {}, null, 2);
 
   const reviewerSummary =
     typeof data?.reviewer_summary === "string"
       ? data.reviewer_summary
-      : JSON.stringify(data?.reviewer_summary, null, 2);
+      : JSON.stringify(data?.reviewer_summary ?? {}, null, 2);
 
   const repoTree =
     typeof data?.tree === "string" ? data.tree : "No tree available.";
@@ -68,6 +73,13 @@ export default function App() {
     }
     return String(item);
   });
+
+  const tabs = [
+    { id: "overview", label: "Overview" },
+    { id: "architecture", label: "Architecture" },
+    { id: "review", label: "Review" },
+    { id: "tree", label: "Repository Tree" },
+  ];
 
   return (
     <div className="app-shell">
@@ -83,7 +95,7 @@ export default function App() {
         loading={loading}
       />
 
-      {loading && <div className="card">Analyzing repository...</div>}
+      {loading && <div className="status-card">Analyzing repository...</div>}
       {error && <div className="error-banner">{error}</div>}
 
       {data && (
@@ -91,44 +103,45 @@ export default function App() {
           <section className="grid grid-4">
             <SummaryCard title="Repository Path" value={data.repo_path || "N/A"} />
             <SummaryCard title="File Count" value={String(data.file_count ?? "N/A")} />
-            <SummaryCard
-              title="Project Type"
-              value={scout?.project_type || "Unknown"}
-            />
-            <SummaryCard
-              title="Architecture Guess"
-              value={scout?.architecture_guess || "Unknown"}
-            />
+            <SummaryCard title="Project Type" value={scout?.project_type || "Unknown"} />
+            <SummaryCard title="Architecture Guess" value={scout?.architecture_guess || "Unknown"} />
           </section>
 
-          <section className="grid grid-2">
-            <FileListCard
-              title="Selected Files"
-              files={selectedFiles}
-            />
-            <FileListCard
-              title="Scout Important Files"
-              files={importantFileDisplay}
-            />
-          </section>
+          <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
-          <section className="grid grid-2">
-            <MarkdownCard
-              title="Architecture Summary"
-              content={architectSummary || "No summary available."}
-            />
-            <MarkdownCard
-              title="Reviewer Summary"
-              content={reviewerSummary || "No review available."}
-            />
-          </section>
+          {activeTab === "overview" && (
+            <section className="grid grid-2">
+              <FileListCard title="Selected Files" files={selectedFiles} />
+              <FileListCard title="Scout Important Files" files={importantFileDisplay} />
+            </section>
+          )}
 
-          <section>
-            <MarkdownCard
-              title="Repository Tree"
-              content={"```text\n" + repoTree + "\n```"}
-            />
-          </section>
+          {activeTab === "architecture" && (
+            <section className="single-panel">
+              <MarkdownCard
+                title="Architecture Summary"
+                content={architectSummary || "No summary available."}
+              />
+            </section>
+          )}
+
+          {activeTab === "review" && (
+            <section className="single-panel">
+              <MarkdownCard
+                title="Reviewer Summary"
+                content={reviewerSummary || "No review available."}
+              />
+            </section>
+          )}
+
+          {activeTab === "tree" && (
+            <section className="single-panel">
+              <div className="card tree-card">
+                <h3>Repository Tree</h3>
+                <pre className="tree-block">{repoTree}</pre>
+              </div>
+            </section>
+          )}
         </div>
       )}
     </div>
