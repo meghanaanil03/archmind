@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException # type: ignore
 from pydantic import BaseModel # type: ignore
+from fastapi.middleware.cors import CORSMiddleware # type: ignore
 
 from app.services.repo_loader import load_repository
 from app.services.file_filter import filter_files
@@ -8,6 +9,13 @@ from app.agents.architect_agent import run_architect_agent
 from app.agents.reviewer_agent import run_reviewer_agent
 
 app = FastAPI(title="ArchMind API")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class LocalRepoRequest(BaseModel):
