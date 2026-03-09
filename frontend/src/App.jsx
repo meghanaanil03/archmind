@@ -34,15 +34,40 @@ export default function App() {
         throw new Error(result.detail || "Analysis failed");
       }
 
+      console.log("API result:", result);
       setData(result);
     } catch (err) {
+      console.error(err);
       setError(err.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
   }
 
-  const scout = data?.architect_scout;
+  const scout = data?.architect_scout || {};
+  const selectedFiles = Array.isArray(data?.selected_files) ? data.selected_files : [];
+  const importantFiles = Array.isArray(scout?.important_files) ? scout.important_files : [];
+
+  const architectSummary =
+    typeof data?.architect_summary === "string"
+      ? data.architect_summary
+      : JSON.stringify(data?.architect_summary, null, 2);
+
+  const reviewerSummary =
+    typeof data?.reviewer_summary === "string"
+      ? data.reviewer_summary
+      : JSON.stringify(data?.reviewer_summary, null, 2);
+
+  const repoTree =
+    typeof data?.tree === "string" ? data.tree : "No tree available.";
+
+  const importantFileDisplay = importantFiles.map((item, index) => {
+    if (typeof item === "string") return item;
+    if (item && typeof item === "object") {
+      return `${item.path || `File ${index + 1}`} — ${item.reason || "No reason provided"}`;
+    }
+    return String(item);
+  });
 
   return (
     <div className="app-shell">
@@ -58,13 +83,14 @@ export default function App() {
         loading={loading}
       />
 
+      {loading && <div className="card">Analyzing repository...</div>}
       {error && <div className="error-banner">{error}</div>}
 
       {data && (
         <div className="dashboard">
           <section className="grid grid-4">
-            <SummaryCard title="Repository Path" value={data.repo_path} />
-            <SummaryCard title="File Count" value={String(data.file_count)} />
+            <SummaryCard title="Repository Path" value={data.repo_path || "N/A"} />
+            <SummaryCard title="File Count" value={String(data.file_count ?? "N/A")} />
             <SummaryCard
               title="Project Type"
               value={scout?.project_type || "Unknown"}
@@ -78,33 +104,29 @@ export default function App() {
           <section className="grid grid-2">
             <FileListCard
               title="Selected Files"
-              files={data.selected_files || []}
+              files={selectedFiles}
             />
             <FileListCard
               title="Scout Important Files"
-              files={(scout?.important_files || []).map((item) =>
-                typeof item === "string" ? item : `${item.path} — ${item.reason}`
-              )}
+              files={importantFileDisplay}
             />
           </section>
 
           <section className="grid grid-2">
             <MarkdownCard
               title="Architecture Summary"
-              content={data.architect_summary || "No summary available."}
+              content={architectSummary || "No summary available."}
             />
             <MarkdownCard
               title="Reviewer Summary"
-              content={data.reviewer_summary || "No review available."}
+              content={reviewerSummary || "No review available."}
             />
           </section>
 
           <section>
             <MarkdownCard
               title="Repository Tree"
-              content={
-                "```text\n" + (data.tree || "No tree available.") + "\n```"
-              }
+              content={"```text\n" + repoTree + "\n```"}
             />
           </section>
         </div>

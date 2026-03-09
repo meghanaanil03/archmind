@@ -1,20 +1,8 @@
-export default function AnalyzeForm({
-  repoPath,
-  setRepoPath,
-  onSubmit,
-  loading,
-}) {
+export default function SummaryCard({ title, value }) {
   return (
-    <form className="analyze-form" onSubmit={onSubmit}>
-      <input
-        type="text"
-        placeholder="Enter local repository path..."
-        value={repoPath}
-        onChange={(e) => setRepoPath(e.target.value)}
-      />
-      <button type="submit" disabled={loading || !repoPath.trim()}>
-        {loading ? "Analyzing..." : "Analyze Repository"}
-      </button>
-    </form>
+    <div className="card summary-card">
+      <div className="card-label">{title}</div>
+      <div className="card-value">{value}</div>
+    </div>
   );
 }
